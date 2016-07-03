@@ -77,9 +77,6 @@ ADD     ./grafana/custom.ini /opt/grafana/conf/custom.ini
 
 # Add the default dashboards
 RUN     mkdir /src/dashboards
-ADD     ./grafana/dashboards/* /src/dashboards/
-RUN     mkdir /src/dashboard-loader
-ADD     ./grafana/dashboard-loader/dashboard-loader.js /src/dashboard-loader/
 
 # Configure nginx and supervisord
 ADD     ./nginx/nginx.conf /etc/nginx/nginx.conf
@@ -102,6 +99,8 @@ EXPOSE  8126
 # Graphite web port
 EXPOSE 81
 
+# Graphite Carbon port
+EXPOSE 2003
 
 
 # -------- #
