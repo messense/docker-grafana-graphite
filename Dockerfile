@@ -8,11 +8,11 @@ ENV DEBIAN_FRONTEND noninteractive
 
 # Install all prerequisites
 RUN     apt-get -y update
-RUN     apt-get -y install software-properties-common
-RUN     add-apt-repository -y ppa:chris-lea/node.js
+RUN     apt-get -y install software-properties-common curl
+RUN     curl -sL https://deb.nodesource.com/setup_6.x | bash
 RUN     apt-get -y update
 RUN     apt-get -y install python-django-tagging python-simplejson python-memcache python-ldap python-cairo python-pysqlite2 python-support \
-                           python-pip gunicorn supervisor nginx-light nodejs git wget curl build-essential python-dev
+                           python-pip gunicorn supervisor nginx-light nodejs git wget build-essential python-dev
 
 RUN     pip install Twisted==11.1.0
 RUN     pip install Django==1.5
@@ -46,7 +46,7 @@ RUN     git clone https://github.com/etsy/statsd.git /src/statsd                
 # Install Grafana
 RUN     mkdir /src/grafana                                                                                                    &&\
         mkdir /opt/grafana                                                                                                    &&\
-        wget https://grafanarel.s3.amazonaws.com/builds/grafana-3.1.0-1466666977beta1.linux-x64.tar.gz -O /src/grafana.tar.gz &&\
+        wget https://grafanarel.s3.amazonaws.com/builds/grafana-3.1.1-1470047149.linux-x64.tar.gz -O /src/grafana.tar.gz &&\
         tar -xzf /src/grafana.tar.gz -C /opt/grafana --strip-components=1                                                     &&\
         rm /src/grafana.tar.gz                                                                                                &&\
         ln -s /opt/grafana/bin/grafana-cli /usr/local/bin/grafana-cli
