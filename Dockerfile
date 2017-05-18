@@ -1,4 +1,4 @@
-FROM     ubuntu:14.04
+FROM     ubuntu:16.04
 
 # ---------------- #
 #   Installation   #
@@ -11,31 +11,33 @@ RUN     apt-get -y update
 RUN     apt-get -y install software-properties-common curl
 RUN     curl -sL https://deb.nodesource.com/setup_6.x | bash
 RUN     apt-get -y update
-RUN     apt-get -y install python-django-tagging python-simplejson python-memcache python-ldap python-cairo python-pysqlite2 python-support \
-                           python-pip gunicorn supervisor nginx-light nodejs git wget build-essential python-dev
+RUN     apt-get -y install python-ldap libcairo2-dev python-pysqlite2 libffi-dev \
+                           python-pip supervisor nginx-light nodejs git wget build-essential python-dev
 
-RUN     pip install Twisted==11.1.0
-RUN     pip install Django==1.5
-RUN     pip install pytz
+RUN     pip install -U pip pytz gunicorn
 RUN     npm install ini chokidar
 
 # Checkout the stable branches of Graphite, Carbon and Whisper and install from there
 RUN     mkdir /src
 RUN     git clone https://github.com/graphite-project/whisper.git /src/whisper            &&\
         cd /src/whisper                                                                   &&\
-        git checkout 0.9.x                                                                &&\
+        git checkout 1.0.x                                                                &&\
+        pip install . && \
         python setup.py install
 
 RUN     git clone https://github.com/graphite-project/carbon.git /src/carbon              &&\
         cd /src/carbon                                                                    &&\
-        git checkout 0.9.x                                                                &&\
+        git checkout 1.0.x                                                                &&\
+        pip install . && \
         python setup.py install
 
 
 RUN     git clone https://github.com/graphite-project/graphite-web.git /src/graphite-web  &&\
         cd /src/graphite-web                                                              &&\
-        git checkout 0.9.x                                                                &&\
-        python setup.py install
+        git checkout 1.0.x                                                                &&\
+        pip install .  && \
+        python setup.py install && \
+        python check-dependencies.py
 
 # Install StatsD
 RUN     git clone https://github.com/etsy/statsd.git /src/statsd                                                                        &&\
@@ -46,7 +48,7 @@ RUN     git clone https://github.com/etsy/statsd.git /src/statsd                
 # Install Grafana
 RUN     mkdir /src/grafana                                                                                                    &&\
         mkdir /opt/grafana                                                                                                    &&\
-        wget https://grafanarel.s3.amazonaws.com/builds/grafana-4.0.2-1481203731.linux-x64.tar.gz -O /src/grafana.tar.gz      &&\
+        wget https://s3-us-west-2.amazonaws.com/grafana-releases/release/grafana-4.2.0.linux-x64.tar.gz -O /src/grafana.tar.gz      &&\
         tar -xzf /src/grafana.tar.gz -C /opt/grafana --strip-components=1                                                     &&\
         rm /src/grafana.tar.gz                                                                                                &&\
         ln -s /opt/grafana/bin/grafana-cli /usr/local/bin/grafana-cli                                                         &&\
@@ -72,7 +74,8 @@ RUN     touch /opt/graphite/storage/graphite.db /opt/graphite/storage/index
 RUN     chown -R www-data /opt/graphite/storage
 RUN     chmod 0775 /opt/graphite/storage /opt/graphite/storage/whisper
 RUN     chmod 0664 /opt/graphite/storage/graphite.db
-RUN     cd /opt/graphite/webapp/graphite && python manage.py syncdb --noinput
+RUN     cp /src/graphite-web/webapp/manage.py /opt/graphite/webapp
+RUN     cd /opt/graphite/webapp/ && python manage.py migrate --run-syncdb --noinput
 
 # Configure Grafana
 ADD     ./grafana/custom.ini /opt/grafana/conf/custom.ini
